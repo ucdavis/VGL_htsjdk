@@ -59,6 +59,7 @@ public enum SAMTag {
     MQ,
     NH,
     NM,
+    OA,
     OQ,
     OP,
     OC,
@@ -68,11 +69,13 @@ public enum SAMTag {
     PQ,
     PT,
     PU,
-    QT,
     Q2,
+    QT,
+    QX,
     R2,
     RG,
     RT,
+    RX,
     S2, // for backwards compatibility
     SA,
     SM,
@@ -81,3 +84,5 @@ public enum SAMTag {
     U2,
     UQ
 }
+
+
