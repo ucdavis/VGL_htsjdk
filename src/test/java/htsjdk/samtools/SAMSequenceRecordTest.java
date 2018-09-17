@@ -83,4 +83,25 @@ public class SAMSequenceRecordTest extends HtsjdkTest {
             Assert.assertEquals(rec1.isSameSequence(rec2), isSame);
         }
     }
+
+    @DataProvider
+    public Object[][] illegalSequenceNames(){
+        return new Object[][]{
+                {"space "},
+                {"comma,"},
+                {"lbrace["},
+                {"rbrace]"},
+                {"slash\\"},
+                {"smaller<"},
+                {"bigger<"},
+                {"lparen("},
+                {"rparen)"},
+                {"lbracket{"},
+                {"rbracket}"}};
+    }
+
+    @Test(dataProvider = "illegalSequenceNames", expectedExceptions = SAMException.class)
+    public void testIllegalSequenceNames(final String sequenceName){
+        new SAMSequenceRecord(sequenceName,100);
+    }
 }

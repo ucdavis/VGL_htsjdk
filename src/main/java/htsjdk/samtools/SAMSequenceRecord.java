@@ -58,10 +58,10 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
 
 
     /**
-     * This is not a valid sequence name, because it is reserved in the MRNM field of SAM text format
+     * This is not a valid sequence name, because it is reserved in the RNEXT field of SAM text format
      * to mean "same reference as RNAME field."
      */
-    public static final String RESERVED_MRNM_SEQUENCE_NAME = "=";
+    public static final String RESERVED_RNEXT_SEQUENCE_NAME = "=";
 
     /**
      * The standard tags are stored in text header without type information, because the type of these tags is known.
@@ -71,9 +71,12 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
                                                 SPECIES_TAG));
 
     // Split on any whitespace
-    private static Pattern SEQUENCE_NAME_SPLITTER = Pattern.compile("\\s");
+    private static Pattern SEQUENCE_NAME_SPLITTER = Pattern.compile("[\\s]");
     // These are the chars matched by \\s.
     private static char[] WHITESPACE_CHARS = {' ', '\t', '\n', '\013', '\f', '\r'}; // \013 is vertical tab
+
+
+    private static Pattern ILLEGAL_RNAME_CHARS = Pattern.compile("[\\\\,\"\'`()<>{}\\]\\[]");
 
     /** a (private) empty constructor is required for JAXB.XML-serialisation */
     @SuppressWarnings("unused")
@@ -91,7 +94,7 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
 
     public SAMSequenceRecord(final String name, final int sequenceLength) {
         if (name != null) {
-            if (SEQUENCE_NAME_SPLITTER.matcher(name).find()) {
+            if (SEQUENCE_NAME_SPLITTER.matcher(name).find() || ILLEGAL_RNAME_CHARS.matcher(name).find()) {
                 throw new SAMException("Sequence name contains invalid character: " + name);
             }
             validateSequenceName(name);
@@ -230,8 +233,8 @@ public class SAMSequenceRecord extends AbstractSAMHeaderRecord implements Clonea
      * Throw an exception if the sequence name is not valid.
      */
     public static void validateSequenceName(final String name) {
-        if (RESERVED_MRNM_SEQUENCE_NAME.equals(name)) {
-            throw new SAMException("'" + RESERVED_MRNM_SEQUENCE_NAME + "' is not a valid sequence name");
+        if (RESERVED_RNEXT_SEQUENCE_NAME.equals(name)) {
+            throw new SAMException("'" + RESERVED_RNEXT_SEQUENCE_NAME + "' is not a valid sequence name");
         }
     }
 
