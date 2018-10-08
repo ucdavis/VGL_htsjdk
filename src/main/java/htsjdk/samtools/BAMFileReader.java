@@ -24,10 +24,6 @@
 package htsjdk.samtools;
 
 
-import htsjdk.samtools.seekablestream.SeekableStream;
-import htsjdk.samtools.util.*;
-import htsjdk.samtools.util.zip.InflaterFactory;
-
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +32,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
+
+import htsjdk.samtools.seekablestream.SeekableStream;
+import htsjdk.samtools.util.AsyncBlockCompressedInputStream;
+import htsjdk.samtools.util.BinaryCodec;
+import htsjdk.samtools.util.BlockCompressedInputStream;
+import htsjdk.samtools.util.BlockGunzipper;
+import htsjdk.samtools.util.BufferedLineReader;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.RuntimeIOException;
+import htsjdk.samtools.util.zip.InflaterFactory;
 
 /**
  * Class for reading and querying BAM files.
@@ -448,6 +454,33 @@ public class BAMFileReader extends SamReader.ReaderImplementation {
         return this.mValidationStringency;
     }
 
+	protected SAMRecord getRecord(long startCoordinate) {
+		if (mStream == null) {
+			throw new IllegalStateException("File reader is closed");
+		}
+		if (mCurrentIterator != null) {
+			throw new IllegalStateException("Iteration in progress");
+		}
+		if (mIsSeekable) {
+			try {
+				mCompressedInputStream.seek(startCoordinate);
+			} catch (final IOException exc) {
+				throw new RuntimeIOException(exc.getMessage(), exc);
+			}
+		}
+
+		BAMRecordCodec bamRecordCodec = new BAMRecordCodec(getFileHeader(), samRecordFactory);
+		bamRecordCodec.setInputStream(BAMFileReader.this.mStream.getInputStream(),
+				BAMFileReader.this.mStream.getInputFileName());
+		final SAMRecord next = bamRecordCodec.decode();
+		final long stopCoordinate = mCompressedInputStream.getFilePointer();
+
+		if (mReader != null && next != null)
+			next.setFileSource(new SAMFileSource(mReader, new BAMFileSpan(new Chunk(startCoordinate, stopCoordinate))));
+
+		return next;
+	}
+
     /**
      * Prepare to iterate through the SAMRecords in file order.
      * Only a single iterator on a BAM file can be extant at a time.  If getIterator() or a query method has been called once,
@@ -787,6 +820,8 @@ public class BAMFileReader extends SamReader.ReaderImplementation {
         @Override
         public boolean hasNext() {
             assertOpen();
+			if (mNextRecord == null)
+				close();
             return (mNextRecord != null);
         }
 
@@ -795,6 +830,8 @@ public class BAMFileReader extends SamReader.ReaderImplementation {
             assertOpen();
             final SAMRecord result = mNextRecord;
             advance();
+			if (result == null)
+				close();
             return result;
         }
 

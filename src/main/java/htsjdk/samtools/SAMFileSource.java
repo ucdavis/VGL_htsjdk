@@ -65,4 +65,13 @@ public class SAMFileSource {
     public SAMFileSpan getFilePointer() {
         return mFilePointer;
     }
+
+	public SAMRecord loadRecord() {
+		SAMRecord sr = null;
+		if (mReader instanceof SamReader.PrimitiveSamReaderToSamReaderAdapter) {
+			sr = ((BAMFileReader) ((SamReader.PrimitiveSamReaderToSamReaderAdapter) mReader).p)
+					.getRecord(((BAMFileSpan) mFilePointer).getFirstOffset());
+		}
+		return sr;
+	}
 }

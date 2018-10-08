@@ -23,16 +23,16 @@
  */
 package htsjdk.samtools;
 
-import htsjdk.samtools.util.BinaryCodec;
-import htsjdk.samtools.util.Log;
-import htsjdk.samtools.util.RuntimeEOFException;
-import htsjdk.samtools.util.SortingCollection;
+import static htsjdk.samtools.SAMTag.CG;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 
-import static htsjdk.samtools.SAMTag.CG;
+import htsjdk.samtools.util.BinaryCodec;
+import htsjdk.samtools.util.Log;
+import htsjdk.samtools.util.RuntimeEOFException;
+import htsjdk.samtools.util.SortingCollection;
 
 /**
  * Class for translating between in-memory and disk representation of BAMRecord.
